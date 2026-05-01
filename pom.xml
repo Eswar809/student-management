@@ -8,11 +8,11 @@
 		<version>2.6.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.burak</groupId>
+	<groupId>com.eswardev</groupId>
 	<artifactId>student-management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>student-management</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Role-based academic portal with Spring Boot, Spring Security, Hibernate, and MySQL</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
