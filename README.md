@@ -2,20 +2,9 @@
 
 > **Java 17 · Spring Boot 2.x · Spring Security · Hibernate · MySQL · Docker · JUnit 5 · Mockito · SLF4J**
 
-A scalable, backend-focused web application managing academic workflows across three distinct user roles — Admin, Student, and Teacher. Built with a clean REST API separation using the Spring MVC layered architecture, it demonstrates enterprise-grade practices including proper ORM mappings, comprehensive testing, containerization, and observability.
+I built a scalable Java Spring Boot application that serves as a role-based academic portal for Admins, Teachers, and Students. Using the Spring MVC layered architecture, it exposes clean REST APIs backed by a MySQL database via Hibernate. The system allows Admins to manage system-wide academic records, Teachers to post assignments and evaluate submissions, and Students to enroll in courses and track their progress. To ensure the reliability and maintainability of this core logic, I containerized the application with Docker, implemented structured SLF4J observability, and achieved high test coverage (~85%) across the authentication, enrollment, and authorization flows using JUnit 5 and Mockito.
 
----
-
-## 🚀 Key Features
-
-* **Role-Based Access Control (RBAC):** Secure authentication and authorization using Spring Security.
-  * **Admins:** Manage users, courses, and system-wide academic records.
-  * **Teachers:** Create courses, post assignments, and evaluate student submissions.
-  * **Students:** Enroll in courses, track assignments, and monitor academic progress.
-* **Optimized Database Queries:** Eliminated N+1 query problems using JPA `JOIN FETCH` and strategic `FetchType.LAZY` configurations.
-* **High Reliability:** Core business logic (Enrollment, Authentication, Authorization) is heavily tested (~85% line coverage) using **JUnit 5** and **Mockito**.
-* **Observability:** Centralized, structured logging implemented across all layers using **SLF4J** and **Logback**.
-* **DevOps Ready:** Fully containerized environment with a multi-container **Docker Compose** setup for seamless local development.
+During development, the application's API response time severely degraded because fetching course lists triggered a Hibernate N+1 query problem, firing off separate SELECT statements for every single course's enrolled students. I figured out that this was caused by the `@OneToMany` and `@ManyToMany` relationships eagerly fetching associations or being accessed lazily in loops. I fixed this by strategically configuring `FetchType.LAZY` on the entities and writing a custom JPA `JOIN FETCH` query to load the entire association graph in a single database hit, dropping response times drastically. Additionally, I ran into race conditions allowing students to enroll in the same course multiple times, which I figured out could be robustly solved by moving the uniqueness constraint natively down to the MySQL database level.
 
 ---
 
@@ -32,36 +21,6 @@ A scalable, backend-focused web application managing academic workflows across t
 | **Testing** | JUnit 5, Mockito |
 | **Observability** | SLF4J, Logback |
 | **DevOps** | Docker, Docker Compose |
-
----
-
-## 🧠 Architectural Enhancements & Problem Solving
-
-### 1. Eradicating the Hibernate N+1 Query Problem
-**Symptom:** Fetching the course list with enrolled students triggered N+1 SELECT statements — one query for all courses, then one additional query per course to fetch its students. API response time was severely degraded.
-**Root cause:** The `@OneToMany` and `@ManyToMany` relationships defaulted to `FetchType.EAGER` or were accessed lazily in loops causing multiple database hits.
-**Fix:** Refactored entity associations to `FetchType.LAZY` and rewrote the DAO layer using `JOIN FETCH` to load the full association graph in a single, optimized query.
-
-```java
-// Optimized single-query fetch
-List<Course> courses = session.createQuery(
-    "select distinct c from Course c left join fetch c.students", 
-    Course.class
-).getResultList();
-```
-
-### 2. Comprehensive Testing Strategy
-Added robust **JUnit 5** and **Mockito** unit tests for the core service layers (`StudentServiceImpl`, `TeacherServiceImpl`, and `StudentCourseDetailsServiceImpl`). The test suite rigorously validates the enrollment flow, authentication logic (`loadUserByUsername`), and role-authorization rules, ensuring deterministic behavior and preventing regressions.
-
-### 3. Enterprise-Grade Observability
-Transitioned the application to use **SLF4J with Logback** for centralized, structured logging.
-* Successful system events (e.g., enrollments, authentication mappings) utilize `INFO` logging.
-* Exceptions (e.g., `UsernameNotFoundException`) are appropriately trapped and routed to `ERROR` logs.
-* Configured `logback-spring.xml` to stream logs to both the console and persistent file storage (`logs/application.log`).
-
-### 4. Preventing Duplicate Enrollment Entries
-**Symptom:** Race conditions allowed a student to enroll in the same course multiple times.
-**Fix:** Enforced data integrity at the database level by adding a composite unique constraint on `(student_id, course_id)`.
 
 ---
 
