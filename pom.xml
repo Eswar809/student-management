@@ -14,7 +14,7 @@
 	<name>student-management</name>
 	<description>Role-based academic portal with Spring Boot, Spring Security, Hibernate, and MySQL</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>

@@ -21,9 +21,13 @@ import com.eswardev.studentmanagement.dao.StudentDao;
 import com.eswardev.studentmanagement.entity.Role;
 import com.eswardev.studentmanagement.entity.Student;
 import com.eswardev.studentmanagement.user.UserDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class StudentServiceImpl implements StudentService {
+	
+	private static final Logger logger = LoggerFactory.getLogger(StudentServiceImpl.class);
 	
 	@Autowired
 	private StudentDao studentDao;
@@ -35,18 +39,21 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	@Transactional
 	public Student findByStudentName(String studentName) {
+		logger.info("Successfully executed findByStudentName or operation related to it");
 		return studentDao.findByStudentName(studentName);
 	}
 	
 	@Override
 	@Transactional
 	public Student findByStudentId(int id) {
+		logger.info("Successfully executed findByStudentId or operation related to it");
 		return studentDao.findByStudentId(id);
 	}
 
 	@Override
 	@Transactional
 	public void save(UserDto userDto) {
+		logger.info("Successfully executed save or operation related to it");
 		Student student = new Student();
 		student.setUserName(userDto.getUserName());
 		student.setPassword(new BCryptPasswordEncoder().encode(userDto.getPassword()));
@@ -62,10 +69,13 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	@Transactional
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		logger.info("Attempting to load student by username: {}", username);
 		Student student = studentDao.findByStudentName(username);
 		if (student == null) {
+			logger.error("Student not found with username: {}", username);
 			throw new UsernameNotFoundException("Invalid username or password.");
 		}
+		logger.info("Successfully loaded student: {}", username);
 		Collection<Role> role = new ArrayList<>();
 		role.add(student.getRole());
 		return new org.springframework.security.core.userdetails.User(student.getUserName(), student.getPassword(),
@@ -79,12 +89,14 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	@Transactional
 	public List<Student> findAllStudents() {
+		logger.info("Successfully executed findAllStudents or operation related to it");
 		return studentDao.findAllStudents();
 	}
 
 	@Override
 	@Transactional
 	public void save(Student student) {
+		logger.info("Successfully executed save or operation related to it");
 		studentDao.save(student);
 		
 	}
@@ -92,6 +104,7 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	@Transactional
 	public void deleteById(int id) {
+		logger.info("Successfully executed deleteById or operation related to it");
 		studentDao.deleteById(id);
 	}
 

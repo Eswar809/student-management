@@ -41,7 +41,7 @@ public class Assignment implements Comparable{
 	private int daysRemaining;
 	
 	
-	@ManyToMany
+	@ManyToMany(fetch=FetchType.LAZY)
 	@JoinTable(name="assignment_details",
 				joinColumns = @JoinColumn(name="assignment_id"),
 				inverseJoinColumns = @JoinColumn(name="student_course_details_id"))

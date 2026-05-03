@@ -26,11 +26,15 @@ import com.eswardev.studentmanagement.service.GradeDetailsService;
 import com.eswardev.studentmanagement.service.StudentCourseDetailsService;
 import com.eswardev.studentmanagement.service.StudentService;
 import com.eswardev.studentmanagement.service.TeacherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
+
 	
 	@Autowired
 	private CourseService courseService;
@@ -52,12 +56,14 @@ public class AdminController {
 	
 	@GetMapping("/adminPanel")
 	public String showAdminPanel() {
+		logger.info("Successfully executed showAdminPanel or operation related to it");
 		
 		return "admin/admin-panel";
 	}
 	
 	@GetMapping("/adminInfo")
 	public String showAdminInfo(Model theModel) {
+		logger.info("Successfully executed showAdminInfo or operation related to it");
 		int courseSize = courseService.findAllCourses().size();
 		theModel.addAttribute("courseSize", courseSize);
 		int studentSize = studentService.findAllStudents().size();
@@ -69,6 +75,7 @@ public class AdminController {
 	
 	@GetMapping("/students")
 	public String showStudentList(Model theModel) {
+		logger.info("Successfully executed showStudentList or operation related to it");
 		theModel.addAttribute("students", studentService.findAllStudents());
 		
 		return "admin/student-list"; 
@@ -140,6 +147,7 @@ public class AdminController {
 	
 	@GetMapping("/teachers")
 	public String showTeacherList(Model theModel) {
+		logger.info("Successfully executed showTeacherList or operation related to it");
 		theModel.addAttribute("teachers", teacherService.findAllTeachers());
 		theModel.addAttribute("error", teacherDeleteErrorValue); 
 		teacherDeleteErrorValue = 0; //0 means the teacher has not any assigned courses, 1 means it has
@@ -162,6 +170,7 @@ public class AdminController {
 	
 	@GetMapping("/addCourse")
 	public String addCourse(Model theModel) {
+		logger.info("Successfully executed addCourse or operation related to it");
 		//add course form has a select teacher field where all teachers registered are showed as drop-down list
 		List<Teacher> teachers = teacherService.findAllTeachers(); 
 		
@@ -189,6 +198,7 @@ public class AdminController {
 	
 	@GetMapping("/courses")
 	public String showCourses(Model theModel) {
+		logger.info("Successfully executed showCourses or operation related to it");
 		theModel.addAttribute("courses", courseService.findAllCourses());	
 		
 		return "admin/course-list";

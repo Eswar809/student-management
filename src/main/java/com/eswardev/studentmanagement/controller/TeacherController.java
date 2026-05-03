@@ -29,11 +29,15 @@ import com.eswardev.studentmanagement.service.CourseService;
 import com.eswardev.studentmanagement.service.GradeDetailsService;
 import com.eswardev.studentmanagement.service.StudentCourseDetailsService;
 import com.eswardev.studentmanagement.service.TeacherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Controller
 @RequestMapping("/teacher")
 public class TeacherController {
+	private static final Logger logger = LoggerFactory.getLogger(TeacherController.class);
+
 	
 	@Autowired
 	private CourseService courseService;

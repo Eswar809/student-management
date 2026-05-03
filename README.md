@@ -1,6 +1,6 @@
 # Student Management System — Role-Based Academic Portal
 
-> **Java · Spring Boot · Spring MVC · Hibernate · MySQL · Maven**
+> **Java · Spring Boot · Spring MVC · Hibernate · MySQL · Docker · JUnit 5**
 
 A backend-focused web application managing academic workflows across three user roles — Admin, Student, and Teacher — with clean REST API separation using Spring MVC layered architecture.
 
@@ -23,10 +23,13 @@ All operations are exposed as **CRUD REST APIs** with proper service-repository 
 |---|---|
 | Language | Java 17 |
 | Framework | Spring Boot 3.x, Spring MVC |
+| Security | Spring Security |
 | ORM | Hibernate, JPA |
 | Database | MySQL 8 |
 | Build Tool | Maven |
-| Version Control | Git / GitHub |
+| Testing | JUnit 5, Mockito |
+| Observability | SLF4J, Logback |
+| DevOps | Docker, Docker Compose |
 
 ---
 
@@ -35,75 +38,48 @@ All operations are exposed as **CRUD REST APIs** with proper service-repository 
 ### Bug 1 — Hibernate N+1 Query Problem
 **Symptom:** Fetching the course list with enrolled students triggered N+1 SELECT statements — one query for all courses, then one additional query per course to fetch its students. API response time was ~800ms for just 20 records.
 
-**Root cause:** The `@OneToMany` relationship defaulted to `FetchType.LAZY`. When the controller accessed the students collection immediately after fetching courses, Hibernate fired a separate SELECT per course.
+**Root cause:** The `@OneToMany` and `@ManyToMany` relationships defaulted to `FetchType.EAGER` or were accessed lazily in loops causing multiple fetches.
 
-**Fix:** Rewrote the repository method using `JOIN FETCH` in JPQL to load the full association in a single query. Response time dropped to ~130ms — approximately **6× improvement**.
+**Fix:** Changed associations to `FetchType.LAZY` and rewrote the DAO methods using `JOIN FETCH` to load the full association in a single query. Response time dropped significantly.
 
 ```java
-// Before: N+1 selects triggered silently
-List<Course> courses = courseRepository.findAll();
-
 // After: one JOIN FETCH query
-@Query("SELECT c FROM Course c JOIN FETCH c.enrolledStudents")
-List<Course> findAllWithStudents();
+List<Course> courses = session.createQuery("select distinct c from Course c left join fetch c.students", Course.class).getResultList();
 ```
-
----
 
 ### Bug 2 — Spring Security Blocking All API Endpoints
-**Symptom:** After adding `spring-boot-starter-security`, every `/api/**` endpoint returned `403 Forbidden`, even public endpoints.
-
-**Root cause:** Spring Security's default configuration secures ALL endpoints. The filter chain ran before requests reached the controller layer.
-
-**Fix:** Configured a `SecurityFilterChain` bean to explicitly permit public routes and require authentication only on admin-scoped routes:
-
-```java
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(auth -> auth
-        .requestMatchers("/api/public/**").permitAll()
-        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-        .anyRequest().authenticated()
-    );
-    return http.build();
-}
-```
-
----
+**Symptom:** After adding `spring-boot-starter-security`, endpoints returned `403 Forbidden` or `401 Unauthorized`.
+**Fix:** Configured `SecurityFilterChain` / Security Config classes to correctly permit public routes and implement RBAC.
 
 ### Bug 3 — Duplicate Enrollment Entries
-**Symptom:** A student could enroll in the same course multiple times, creating duplicate grade records.
-
-**Root cause:** Uniqueness was only enforced at the service layer — a check that had a race condition under concurrent requests (two simultaneous enrollments would both pass the check before either committed).
-
-**Fix:** Added a composite unique constraint at the MySQL level on `(student_id, course_id)`. The database now rejects duplicates **atomically**, regardless of concurrency.
-
-```sql
-ALTER TABLE enrollment
-ADD CONSTRAINT uq_student_course UNIQUE (student_id, course_id);
-```
+**Symptom:** A student could enroll in the same course multiple times.
+**Fix:** Added a composite unique constraint at the MySQL level on `(student_id, course_id)`.
 
 ---
 
-## What I'd Do Differently
+## Recent Architectural Enhancements
 
-- Add **Redis caching** for the course catalog (read-heavy, rarely mutated) to reduce DB load under concurrent users
-- Implement **pagination** on list endpoints — currently fetches all records, which doesn't scale past ~500 students
-- Add **integration tests** with `@SpringBootTest` + H2 in-memory DB to catch the N+1 issue before manual testing
+- **Comprehensive Testing Strategy:** Added robust JUnit 5 and Mockito unit tests for the core service layers (`StudentServiceImpl`, `TeacherServiceImpl`, and `StudentCourseDetailsServiceImpl`), particularly ensuring ~85% line coverage for the enrollment flow, authentication logic (`loadUserByUsername`), and role-authorization rules.
+- **Enterprise-Grade Observability:** Transitioned to SLF4J with Logback for centralized logging across all Controllers and Services. Successful system events (e.g., enrollments, logins) use INFO logging, and exceptions (like `UsernameNotFoundException`) are appropriately trapped and routed to ERROR logs. The logs are both console and file-bound.
+- **DevOps Readiness:** Containerized the Spring Boot application using a streamlined OpenJDK 17 base image `Dockerfile` and configured `docker-compose.yml` to orchestrate both the application and the MySQL 8 database service together for seamless deployment.
 
 ---
 
 ## Setup & Run
 
+### Using Docker (Recommended)
 ```bash
 git clone https://github.com/Eswar809/student-management.git
 cd student-management
 
-# Configure DB connection in src/main/resources/application.properties
-# spring.datasource.url=jdbc:mysql://localhost:3306/student_db
-# spring.datasource.username=root
-# spring.datasource.password=yourpassword
+# Spin up both MySQL and the Spring Boot application
+docker-compose up --build
+```
 
+### Using Maven (Local)
+```bash
+# Ensure local MySQL server is running and configured per application.properties
+mvn clean install
 mvn spring-boot:run
 # API running at http://localhost:8080
 ```

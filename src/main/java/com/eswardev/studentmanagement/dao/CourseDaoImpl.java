@@ -28,7 +28,7 @@ public class CourseDaoImpl implements CourseDao {
 	@Override
 	public List<Course> findAllCourses() {
 		Session session = entityManager.unwrap(Session.class);
-		List<Course> courses = session.createQuery("from Course", Course.class).getResultList();
+		List<Course> courses = session.createQuery("select distinct c from Course c left join fetch c.students", Course.class).getResultList();
 		return courses;
 	}
 

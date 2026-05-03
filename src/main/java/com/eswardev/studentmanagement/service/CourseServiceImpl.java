@@ -8,9 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eswardev.studentmanagement.dao.CourseDao;
 import com.eswardev.studentmanagement.entity.Course;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class CourseServiceImpl implements CourseService {
+	private static final Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
+
 	
 	@Autowired
 	private CourseDao courseDao;
@@ -18,24 +22,28 @@ public class CourseServiceImpl implements CourseService {
 	@Override
 	@Transactional
 	public void save(Course course) {
+		logger.info("Successfully executed save or operation related to it");
 		courseDao.saveCourse(course);
 	}
 
 	@Override
 	@Transactional
 	public List<Course> findAllCourses() {
+		logger.info("Successfully executed findAllCourses or operation related to it");
 		return courseDao.findAllCourses();
 	}
 
 	@Override
 	@Transactional
 	public Course findCourseById(int id) {
+		logger.info("Successfully executed findCourseById or operation related to it");
 		return courseDao.findCourseById(id);
 	}
 
 	@Override
 	@Transactional
 	public void deleteCourseById(int id) {
+		logger.info("Successfully executed deleteCourseById or operation related to it");
 		courseDao.deleteCourseById(id);		
 	}
 

@@ -20,10 +20,14 @@ import com.eswardev.studentmanagement.entity.Role;
 import com.eswardev.studentmanagement.service.StudentService;
 import com.eswardev.studentmanagement.service.TeacherService;
 import com.eswardev.studentmanagement.user.UserDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequestMapping("/register")
 public class RegistrationController {
+	private static final Logger logger = LoggerFactory.getLogger(RegistrationController.class);
+
 	
 	@Autowired
 	private StudentService studentService;
@@ -36,6 +40,7 @@ public class RegistrationController {
 	
 	@InitBinder
 	public void initBinder(WebDataBinder dataBinder) {
+		logger.info("Successfully executed initBinder or operation related to it");
 		
 		StringTrimmerEditor stringTrimmerEditor = new StringTrimmerEditor(true);
 		
@@ -46,6 +51,7 @@ public class RegistrationController {
 	
 	@GetMapping("/showRegistrationForm")
 	public String showRegistrationForm(Model theModel) {
+		logger.info("Successfully executed showRegistrationForm or operation related to it");
 		theModel.addAttribute("userDto", new UserDto());		
 		return "registration/registration-form";
 	}

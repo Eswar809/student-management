@@ -20,11 +20,15 @@ import com.eswardev.studentmanagement.service.CourseService;
 import com.eswardev.studentmanagement.service.AssignmentDetailsService;
 import com.eswardev.studentmanagement.service.StudentCourseDetailsService;
 import com.eswardev.studentmanagement.service.StudentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Controller
 @RequestMapping("/student")
 public class StudentController {
+	private static final Logger logger = LoggerFactory.getLogger(StudentController.class);
+
 	
 	@Autowired
 	private StudentService studentService;

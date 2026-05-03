@@ -39,13 +39,13 @@ public class StudentCourseDetails {
 	@Column(name="course_id")
 	private int courseId;
 	
-	@ManyToMany(cascade = CascadeType.ALL)
+	@ManyToMany(fetch=FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinTable(name="assignment_details",
 				joinColumns = @JoinColumn(name="student_course_details_id"),
 				inverseJoinColumns = @JoinColumn(name="assignment_id"))
 	private List<Assignment> assignments;
 	
-	@OneToOne(fetch=FetchType.EAGER, cascade=CascadeType.ALL)  
+	@OneToOne(fetch=FetchType.LAZY, cascade=CascadeType.ALL)  
 	@JoinColumn(name="grade_details_id")
 	private GradeDetails gradeDetails;
 	
