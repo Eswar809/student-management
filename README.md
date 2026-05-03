@@ -1,85 +1,96 @@
 # Student Management System — Role-Based Academic Portal
 
-> **Java · Spring Boot · Spring MVC · Hibernate · MySQL · Docker · JUnit 5**
+> **Java 17 · Spring Boot 2.x · Spring Security · Hibernate · MySQL · Docker · JUnit 5 · Mockito · SLF4J**
 
-A backend-focused web application managing academic workflows across three user roles — Admin, Student, and Teacher — with clean REST API separation using Spring MVC layered architecture.
-
----
-
-## What I Built
-
-A full-stack Java Spring Boot application with **role-based access control (RBAC)**:
-- **Admins** manage users, courses, and academic records
-- **Teachers** post assignments and submit grades
-- **Students** enroll in courses and track their academic progress
-
-All operations are exposed as **CRUD REST APIs** with proper service-repository separation and Hibernate ORM for database mapping.
+A scalable, backend-focused web application managing academic workflows across three distinct user roles — Admin, Student, and Teacher. Built with a clean REST API separation using the Spring MVC layered architecture, it demonstrates enterprise-grade practices including proper ORM mappings, comprehensive testing, containerization, and observability.
 
 ---
 
-## Tech Stack
+## 🚀 Key Features
 
-| Layer | Technology |
+* **Role-Based Access Control (RBAC):** Secure authentication and authorization using Spring Security.
+  * **Admins:** Manage users, courses, and system-wide academic records.
+  * **Teachers:** Create courses, post assignments, and evaluate student submissions.
+  * **Students:** Enroll in courses, track assignments, and monitor academic progress.
+* **Optimized Database Queries:** Eliminated N+1 query problems using JPA `JOIN FETCH` and strategic `FetchType.LAZY` configurations.
+* **High Reliability:** Core business logic (Enrollment, Authentication, Authorization) is heavily tested (~85% line coverage) using **JUnit 5** and **Mockito**.
+* **Observability:** Centralized, structured logging implemented across all layers using **SLF4J** and **Logback**.
+* **DevOps Ready:** Fully containerized environment with a multi-container **Docker Compose** setup for seamless local development.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
 |---|---|
-| Language | Java 17 |
-| Framework | Spring Boot 3.x, Spring MVC |
-| Security | Spring Security |
-| ORM | Hibernate, JPA |
-| Database | MySQL 8 |
-| Build Tool | Maven |
-| Testing | JUnit 5, Mockito |
-| Observability | SLF4J, Logback |
-| DevOps | Docker, Docker Compose |
+| **Core** | Java 17 |
+| **Framework** | Spring Boot 2.6.x, Spring MVC |
+| **Security** | Spring Security |
+| **Data Access** | Hibernate, Spring Data JPA |
+| **Database** | MySQL 8 |
+| **Build Tool** | Maven |
+| **Testing** | JUnit 5, Mockito |
+| **Observability** | SLF4J, Logback |
+| **DevOps** | Docker, Docker Compose |
 
 ---
 
-## What Broke (and What I Fixed)
+## 🧠 Architectural Enhancements & Problem Solving
 
-### Bug 1 — Hibernate N+1 Query Problem
-**Symptom:** Fetching the course list with enrolled students triggered N+1 SELECT statements — one query for all courses, then one additional query per course to fetch its students. API response time was ~800ms for just 20 records.
-
-**Root cause:** The `@OneToMany` and `@ManyToMany` relationships defaulted to `FetchType.EAGER` or were accessed lazily in loops causing multiple fetches.
-
-**Fix:** Changed associations to `FetchType.LAZY` and rewrote the DAO methods using `JOIN FETCH` to load the full association in a single query. Response time dropped significantly.
+### 1. Eradicating the Hibernate N+1 Query Problem
+**Symptom:** Fetching the course list with enrolled students triggered N+1 SELECT statements — one query for all courses, then one additional query per course to fetch its students. API response time was severely degraded.
+**Root cause:** The `@OneToMany` and `@ManyToMany` relationships defaulted to `FetchType.EAGER` or were accessed lazily in loops causing multiple database hits.
+**Fix:** Refactored entity associations to `FetchType.LAZY` and rewrote the DAO layer using `JOIN FETCH` to load the full association graph in a single, optimized query.
 
 ```java
-// After: one JOIN FETCH query
-List<Course> courses = session.createQuery("select distinct c from Course c left join fetch c.students", Course.class).getResultList();
+// Optimized single-query fetch
+List<Course> courses = session.createQuery(
+    "select distinct c from Course c left join fetch c.students", 
+    Course.class
+).getResultList();
 ```
 
-### Bug 2 — Spring Security Blocking All API Endpoints
-**Symptom:** After adding `spring-boot-starter-security`, endpoints returned `403 Forbidden` or `401 Unauthorized`.
-**Fix:** Configured `SecurityFilterChain` / Security Config classes to correctly permit public routes and implement RBAC.
+### 2. Comprehensive Testing Strategy
+Added robust **JUnit 5** and **Mockito** unit tests for the core service layers (`StudentServiceImpl`, `TeacherServiceImpl`, and `StudentCourseDetailsServiceImpl`). The test suite rigorously validates the enrollment flow, authentication logic (`loadUserByUsername`), and role-authorization rules, ensuring deterministic behavior and preventing regressions.
 
-### Bug 3 — Duplicate Enrollment Entries
-**Symptom:** A student could enroll in the same course multiple times.
-**Fix:** Added a composite unique constraint at the MySQL level on `(student_id, course_id)`.
+### 3. Enterprise-Grade Observability
+Transitioned the application to use **SLF4J with Logback** for centralized, structured logging.
+* Successful system events (e.g., enrollments, authentication mappings) utilize `INFO` logging.
+* Exceptions (e.g., `UsernameNotFoundException`) are appropriately trapped and routed to `ERROR` logs.
+* Configured `logback-spring.xml` to stream logs to both the console and persistent file storage (`logs/application.log`).
 
----
-
-## Recent Architectural Enhancements
-
-- **Comprehensive Testing Strategy:** Added robust JUnit 5 and Mockito unit tests for the core service layers (`StudentServiceImpl`, `TeacherServiceImpl`, and `StudentCourseDetailsServiceImpl`), particularly ensuring ~85% line coverage for the enrollment flow, authentication logic (`loadUserByUsername`), and role-authorization rules.
-- **Enterprise-Grade Observability:** Transitioned to SLF4J with Logback for centralized logging across all Controllers and Services. Successful system events (e.g., enrollments, logins) use INFO logging, and exceptions (like `UsernameNotFoundException`) are appropriately trapped and routed to ERROR logs. The logs are both console and file-bound.
-- **DevOps Readiness:** Containerized the Spring Boot application using a streamlined OpenJDK 17 base image `Dockerfile` and configured `docker-compose.yml` to orchestrate both the application and the MySQL 8 database service together for seamless deployment.
+### 4. Preventing Duplicate Enrollment Entries
+**Symptom:** Race conditions allowed a student to enroll in the same course multiple times.
+**Fix:** Enforced data integrity at the database level by adding a composite unique constraint on `(student_id, course_id)`.
 
 ---
 
-## Setup & Run
+## 🐳 Setup & Run
 
 ### Using Docker (Recommended)
+The fastest way to run the application and its dependencies.
+
 ```bash
 git clone https://github.com/Eswar809/student-management.git
 cd student-management
 
-# Spin up both MySQL and the Spring Boot application
+# Spin up both MySQL and the Spring Boot application containers
 docker-compose up --build
 ```
+*The application will be available at `http://localhost:8080`.*
 
-### Using Maven (Local)
+### Using Maven (Local Development)
+Ensure you have a local MySQL server running and configured.
+
+1. Update database credentials in `src/main/resources/application.properties`:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/spring_security_custom_user_demo?useSSL=false&serverTimezone=UTC
+spring.datasource.username=springstudent
+spring.datasource.password=springstudent
+```
+
+2. Build and run the application:
 ```bash
-# Ensure local MySQL server is running and configured per application.properties
 mvn clean install
 mvn spring-boot:run
-# API running at http://localhost:8080
 ```
