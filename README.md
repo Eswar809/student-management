@@ -6,6 +6,8 @@ I built a scalable Java Spring Boot application that serves as a role-based acad
 
 During development, the application's API response time severely degraded because fetching course lists triggered a Hibernate N+1 query problem, firing off separate SELECT statements for every single course's enrolled students. I figured out that this was caused by the `@OneToMany` and `@ManyToMany` relationships eagerly fetching associations or being accessed lazily in loops. I fixed this by strategically configuring `FetchType.LAZY` on the entities and writing a custom JPA `JOIN FETCH` query to load the entire association graph in a single database hit, dropping response times drastically. Additionally, I ran into race conditions allowing students to enroll in the same course multiple times, which I figured out could be robustly solved by moving the uniqueness constraint natively down to the MySQL database level.
 
+While implementing the **Export to CSV** feature for the admin dashboard, I encountered a challenge dealing with how Spring Boot handles file downloads. Initially, writing the file to the local server disk and then serving it seemed straightforward, but it proved to be inefficient and error-prone in a containerized environment due to ephemeral storage limitations. I figured out that injecting `HttpServletResponse` directly into the controller method and dynamically streaming the payload via `PrintWriter`—while accurately setting the `Content-Disposition` header—allowed the browser to immediately prompt a file download. This significantly improved performance by completely bypassing file I/O operations on the server side.
+
 ---
 
 ## 🛠️ Tech Stack
