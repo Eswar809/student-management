@@ -50,7 +50,10 @@
 	</div>
 	
 	<div class="content">
-	<h3>Student List</h3>
+	<div style="display: flex; justify-content: space-between; align-items: center;">
+		<h3>Student List</h3>
+		<a class="button courses-button" th:href="@{/admin/students/export}"><i class="fa fa-download"></i> <span>Export to CSV</span></a>
+	</div>
 	
 	<div th:if="${students.size() == 0}">There are no students.</div>
 	

@@ -81,6 +81,26 @@ public class AdminController {
 		return "admin/student-list"; 
 	}
 	
+	@GetMapping("/students/export")
+	public void exportStudentsToCSV(javax.servlet.http.HttpServletResponse response) throws java.io.IOException {
+		response.setContentType("text/csv");
+		java.text.DateFormat dateFormatter = new java.text.SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+		String currentDateTime = dateFormatter.format(new java.util.Date());
+		
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=students_" + currentDateTime + ".csv";
+		response.setHeader(headerKey, headerValue);
+		
+		List<Student> students = studentService.findAllStudents();
+		
+		java.io.PrintWriter writer = response.getWriter();
+		writer.println("ID,Username,First Name,Last Name,Email");
+		
+		for (Student student : students) {
+			writer.println(student.getId() + "," + student.getUserName() + "," + student.getFirstName() + "," + student.getLastName() + "," + student.getEmail());
+		}
+	}
+	
 	@RequestMapping("/students/delete")
 	public String deleteStudent(@RequestParam("studentId") int studentId) {
 		List<StudentCourseDetails> list = studentCourseDetailsService.findByStudentId(studentId);
