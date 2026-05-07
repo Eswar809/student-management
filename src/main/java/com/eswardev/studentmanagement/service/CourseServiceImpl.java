@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eswardev.studentmanagement.dao.CourseDao;
+import com.eswardev.studentmanagement.dao.CourseRepository;
 import com.eswardev.studentmanagement.entity.Course;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,9 @@ public class CourseServiceImpl implements CourseService {
 	
 	@Autowired
 	private CourseDao courseDao;
+
+	@Autowired
+	private CourseRepository courseRepository;
 	
 	@Override
 	@Transactional
@@ -30,7 +34,7 @@ public class CourseServiceImpl implements CourseService {
 	@Transactional
 	public List<Course> findAllCourses() {
 		logger.info("Successfully executed findAllCourses or operation related to it");
-		return courseDao.findAllCourses();
+		return courseRepository.findAllActiveCoursesWithStudents();
 	}
 
 	@Override
